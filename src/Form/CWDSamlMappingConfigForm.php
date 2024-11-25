@@ -66,6 +66,13 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
       '#title' => $this->t('Hide Drupal Login in Prod.'),
       '#default_value' => $config->get('hide_drupal_login_prod'),
     ];
+    $form['customize_links']['custom_login_page_text'] = [
+      '#type' => 'text_format',
+      '#title' => $this->t('Custom text for the login page'),
+      '#format' => 'full_html',
+      '#allowed_formats' => ['full_html'],
+      '#default_value' => $config->get('custom_login_page_text')['value'],
+    ];
     $form['customize_headings'] = [
       '#type' => 'details',
       '#title' => $this->t('Customize the login page heading'),
