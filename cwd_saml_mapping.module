@@ -307,8 +307,10 @@ function cwd_saml_mapping_local_tasks_alter(&$local_tasks) {
 }
 
 function cwd_saml_mapping_user_login(UserInterface $account) {
-  $relay_state = $_REQUEST['RelayState'];
-  if($relay_state != "/") {
+  if (!isset($_REQUEST['RelayState'])) {
+    return;
+  }
+  if ($_REQUEST['RelayState'] != "/") {
     return;
   }
 
