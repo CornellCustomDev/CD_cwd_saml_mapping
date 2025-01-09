@@ -348,7 +348,7 @@ function cwd_saml_mapping_user_login(UserInterface $account) {
       // get config value of redirect
       $redirect = $config->get('redirect');
       $redirect = _cwd_saml_mapping_return_token_url($redirect, $account);
-      \Drupal::service(id: 'request_stack')->getCurrentRequest()->query->set('destination', $redirect);
+      \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $redirect);
       return;
     }
   
