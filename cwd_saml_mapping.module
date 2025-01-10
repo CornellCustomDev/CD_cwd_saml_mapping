@@ -1,6 +1,8 @@
 <?php
 
+use Drupal\Core\Url;
 use Drupal\user\UserInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\cwd_saml_mapping\ShibbolethHelper;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -200,7 +202,6 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
   if ($current_route_name != "user.login" && $current_route_name != "cwd_saml_mapping.accessdenied") {
     return;
   }
-
   //Look at our global moduel config to see if we use prod saml in production Pantheon
   $config = \Drupal::config('cwd_saml_mapping.config_form');
   $show_all_idps = $config->getRawData()['show_all_idps'];
@@ -281,6 +282,8 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
       unset($form['actions']);
       unset($form['#submit']);
       return;
+    } else {
+      $form['#submit'][] = 'cwd_saml_mapping_user_login_form_submit';
     }
 
     $drupal_login_text = $config->getRawData()['drupal_login_text'] ?? "Login with Drupal";
@@ -292,8 +295,21 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
       '#weight' => 9998,
     );
     unset($form['name']['#attributes']['autofocus']);
+    
   }
 }
+
+/**
+ * Custom submit handler for the login form.
+ */
+function cwd_saml_mapping_user_login_form_submit($form, FormStateInterface $form_state) {
+  $current_path = \Drupal::service('path.current')->getPath();
+  if(empty($form_state->getRedirect())) {
+    $current_path = Url::fromUserInput($current_path);
+    $form_state->setRedirectUrl($current_path);
+  }
+}
+
 
 function cwd_saml_mapping_local_tasks_alter(&$local_tasks) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
@@ -313,7 +329,6 @@ function cwd_saml_mapping_user_login(UserInterface $account) {
   if ($_REQUEST['RelayState'] != "/") {
     return;
   }
-
   $entity_ids = \Drupal::entityQuery('saml_login_redirect')->condition('status', 1)->execute();
   if($entity_ids == null) {
     return;
