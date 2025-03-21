@@ -2,13 +2,13 @@
 
 ## INTRODUCTION
 
-The cwd_saml_mapping module is a module that used with drupal/saml_sp allows for the following
+The cwd_saml_mapping module is for use with drupal/saml_sp, and allows for the following:
 
 - Authentication through multiple IDP's ex. Cornell Test, Weill Test, Cornell Production Shibboleth
 - Configuration of which IDP to use in production (test or prod) and hooks all other non prod instance to test Shibboleth
 - Auto role assignment via a Saml Role Mapping config entity
 - Ability to map saml data into Drupal user fields
-- Ability to add redirect per role on longin
+- Ability to add redirect per role on login
 - Ability to add redirect per role on logout
 
 ## REQUIREMENTS
@@ -29,6 +29,10 @@ This module depends on the drupal/saml_sp module.
 - Configure field mapping form saml to Drupal user fields: /admin/config/people/cwd-saml-mapping-config/saml-field-mapping
 - Configure login redirect: /admin/config/people/cwd-saml-mapping-config/saml-login-redirect
 - Configure logout redirects: /admin/config/people/cwd-saml-mapping-config/saml-logout-redirect
+
+## DOCUMENTATION
+
+A whole lot more documentation is available on Confluence: https://confluence.cornell.edu/display/customdev/SAML_SP
 
 ## MAINTAINERS
 
