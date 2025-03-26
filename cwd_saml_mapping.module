@@ -35,8 +35,10 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
 
     //Property in saml we are looking at
     $samlprop = $role_assigment_config->get('samlprop');
+    $is_other = false;
     if($samlprop == "other") {
       $samlprop = $role_assigment_config->get('samlother');
+      $is_other = true;
     }
 
     //Drupal's accepted values we configure on our end
@@ -44,8 +46,12 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
 
     
     //Catch condition the property is not release to us from shibboleth (ex. Test Shibboleth does no release groups property)
-    if (!array_key_exists($samlprop, $attributes)) {
-      $missing_property_messages[] =  $saml_property_mappings[$samlprop] . " => " . $role_assigment_config->get('id');
+    if (!array_key_exists( $samlprop, $attributes)) {
+      if($is_other) {
+        $missing_property_messages[] =  $samlprop . " => " . $role_assigment_config->get('id');  
+      } else {
+        $missing_property_messages[] =  $saml_property_mappings[$samlprop] . " => " . $role_assigment_config->get('id');
+      }
       $rolesUnableToEvaluateForRemoval[] = $role;
       continue;
     }
