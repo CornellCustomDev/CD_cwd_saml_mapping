@@ -96,7 +96,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('403_custom_text'),
       '#size' => 200,
       '#maxlength' => 2000,
-      '#required' => false,
+      '#required' => FALSE,
     ];
     $form['customize_403']['403_custom_logged_in_text'] = [
       '#type' => 'textarea',
@@ -105,7 +105,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('403_custom_logged_in_text'),
       '#size' => 200,
       '#maxlength' => 2000,
-      '#required' => false,
+      '#required' => FALSE,
     ];
     $form['customize_403']['local_login_text'] = [
       '#type' => 'textfield',
@@ -137,6 +137,17 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('restrict_pages_url') ?? "none",
     ];
 
+    $form['role_management_settings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Role Management Settings'),
+      '#open' => TRUE,
+    ];
+    $form['role_management_settings']['remove_roles'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('By checking this box all any role mapped through SSO will remove roles if a user no longer meets the criteria.'),
+      '#default_value' => $config->get('remove_roles') ?? TRUE,
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -154,9 +165,9 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     parent::submitForm($form, $form_state);
     $ignore = ["submit", "form_build_id", "form_token", "form_id", "op"];
     $config = $this->config('cwd_saml_mapping.config_form');
-    foreach($form_state->getValues() as $key => $value) {
-      if(!in_array($key,$ignore)) {
-        $config->set($key,$value);
+    foreach ($form_state->getValues() as $key => $value) {
+      if (!in_array($key, $ignore)) {
+        $config->set($key, $value);
       }
     }
     $config->save();

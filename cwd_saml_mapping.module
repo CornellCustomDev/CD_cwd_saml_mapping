@@ -17,9 +17,9 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   //-------------------------------------------------------------------------------------
   //Get all our saml_role_mapping configs for processing
   $entity_ids = \Drupal::entityQuery('saml_role_mapping')->condition('status', 1)->execute();
-  $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
+  $configs = \Drupal::entityTypeManager()->getStorage(entity_type_id: 'saml_role_mapping')->loadMultiple($entity_ids);
   //Variables for storing data and signaling a user save is needed.
-  $saveUser = false;
+  $saveUser = FALSE;
   $samlManagedRoles = [];
   $userRolesToAdd = [];
   $saml_property_mappings = ShibbolethHelper::getMappingArray();
@@ -27,7 +27,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   $rolesUnableToEvaluateForRemoval = [];
   foreach ($configs as $role_assigment_config) {
     //Create a list of all roles managed by saml properties
-    $needsRole = false;
+    $needsRole = FALSE;
     $role = $role_assigment_config->get('role');
     if (!in_array($role, $samlManagedRoles)) {
       $samlManagedRoles[] = $role;
@@ -35,22 +35,22 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
 
     //Property in saml we are looking at
     $samlprop = $role_assigment_config->get('samlprop');
-    if($samlprop == "other") {
+    if ($samlprop == "other") {
       $samlprop = $role_assigment_config->get('samlother');
     }
 
     //Drupal's accepted values we configure on our end
     $values = explode("\r\n", $role_assigment_config->get('values'));
 
-    
+
     //Catch condition the property is not release to us from shibboleth (ex. Test Shibboleth does no release groups property)
     if (!array_key_exists($samlprop, $attributes)) {
-      $missing_property_messages[] =  $saml_property_mappings[$samlprop] . " => " . $role_assigment_config->get('id');
+      $missing_property_messages[] = $saml_property_mappings[$samlprop] . " => " . $role_assigment_config->get('id');
       $rolesUnableToEvaluateForRemoval[] = $role;
       continue;
     }
 
-     //Catch condition that the property is released but has no data
+    //Catch condition that the property is released but has no data
     if (is_null($attributes[$samlprop])) {
       \Drupal::logger('cwd_saml_mapping')->warning("Shibboleth data not found for " . $saml_property_mappings[$samlprop] . " need to check the saml_role_mapping configuration for " . $role_assigment_config->get('id'));
       $rolesUnableToEvaluateForRemoval[] = $role;
@@ -58,7 +58,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
     }
 
     $specialmatchcriteria = $role_assigment_config->get('specialmatchcriteria') ?? "none";
-    switch($specialmatchcriteria) {
+    switch ($specialmatchcriteria) {
       case "none":
         //If saml attribute has more than one value in a field we will look at all values
         if (count($attributes[$samlprop]) > 1) {
@@ -76,14 +76,14 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
         if (count($attributes[$samlprop]) > 1) {
           $saml_pro_data = $attributes[$samlprop];
           //Search each saml data element in array if it contains any of the accepted values
-          foreach($saml_pro_data as $saml_data_element) {
-            if($needsRole) {
+          foreach ($saml_pro_data as $saml_data_element) {
+            if ($needsRole) {
               break;
             }
             //Find any partial containing match of the value we are searching for
-            foreach($values as $stringtofind) {
-              if(str_contains($saml_data_element,$stringtofind)) {
-                $needsRole = true;
+            foreach ($values as $stringtofind) {
+              if (str_contains($saml_data_element, $stringtofind)) {
+                $needsRole = TRUE;
                 break;
               }
             }
@@ -93,9 +93,9 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
           //Single valued saml property
           $saml_pro_data = $attributes[$samlprop][0];
           //Check if the saml data contains any of our accepted values
-          foreach($values as $stringtofind) {
-            if(str_contains($saml_pro_data,$stringtofind)) {
-              $needsRole = true;
+          foreach ($values as $stringtofind) {
+            if (str_contains($saml_pro_data, $stringtofind)) {
+              $needsRole = TRUE;
               break;
             }
           }
@@ -110,9 +110,9 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
       $userRolesToAdd[] = $role;
     }
   } // end of for loop processing saml_role_mapping configs
-  
+
   //Log message about configurations with missing properties
-  if(count($missing_property_messages) > 0) {
+  if (count($missing_property_messages) > 0) {
     $message = "Property not found in Shibboleth data found for [" . implode("] , [", $missing_property_messages) . "]";
     \Drupal::logger('cwd_saml_mapping')->info($message);
   }
@@ -121,18 +121,22 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   foreach ($userRolesToAdd as $roleToAdd) {
     if (!$user->hasRole($roleToAdd)) {
       $user->addRole($roleToAdd);
-      $saveUser = true;
+      $saveUser = TRUE;
     }
   }
 
-  //Compute roles we need to take away and remove if needed
-  $userRolesToRemove = array_diff($samlManagedRoles, $userRolesToAdd);
-  //Don't remove roles we don't have all the properties from shibboleth to evaluate
-  $userRolesToRemove = array_diff($userRolesToRemove,$rolesUnableToEvaluateForRemoval);
-  foreach ($userRolesToRemove as $roleToRemove) {
-    if ($user->hasRole($roleToRemove)) {
-      $user->removeRole($roleToRemove);
-      $saveUser = true;
+  $config = \Drupal::config('cwd_saml_mapping.config_form');
+  $should_remove_roles = $config->getRawData()['remove_roles'] ?? TRUE;
+  if ($should_remove_roles) {
+    //Compute roles we need to take away and remove if needed
+    $userRolesToRemove = array_diff($samlManagedRoles, $userRolesToAdd);
+    //Don't remove roles we don't have all the properties from shibboleth to evaluate
+    $userRolesToRemove = array_diff($userRolesToRemove, $rolesUnableToEvaluateForRemoval);
+    foreach ($userRolesToRemove as $roleToRemove) {
+      if ($user->hasRole($roleToRemove)) {
+        $user->removeRole($roleToRemove);
+        $saveUser = TRUE;
+      }
     }
   }
 
@@ -149,7 +153,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   $new_user_name = $attributes[$username_saml_prop][0];
   if ($user->name != $new_user_name) {
     $user->name = $attributes[$username_saml_prop];
-    $saveUser = true;
+    $saveUser = TRUE;
   }
   //-------------------------------------------------------------------------------------
   // End of use global config to set user name
@@ -176,7 +180,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
     }
     if ($current_field_value != $new_field_value) {
       $user->{$field_mapping_config->get('field')} = $new_field_value;
-      $saveUser = true;
+      $saveUser = TRUE;
     }
   }
   //-------------------------------------------------------------------------------------
@@ -206,9 +210,9 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
   $show_all_idps = $config->getRawData()['show_all_idps'];
 
-  if($show_all_idps) {
+  if ($show_all_idps) {
     foreach ($variables['items'] as $index => $link) {
-      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? null;
+      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? NULL;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
       $link['value']->setText(new TranslatableMarkup($idp_name . " Login"));
       $link['attributes']->addClass(['login-link-button', $idp_class]);
@@ -227,7 +231,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
       elseif (get_class($link['value']) != "Drupal\Core\Link") {
         continue;
       }
-      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? null;
+      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? NULL;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
       if ($idp_name && str_contains(strtolower(($idp_name)), "test") && !$show_all_idps) {
         unset($variables['items'][$index]);
@@ -248,7 +252,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
       elseif (get_class($link['value']) != "Drupal\Core\Link") {
         continue;
       }
-      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? null;
+      $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? NULL;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
       if ($idp_name && str_contains(strtolower(($idp_name)), "prod") && !$show_all_idps) {
         unset($variables['items'][$index]);
@@ -265,10 +269,10 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
   if ($form_id == 'user_login_form') {
     $config = \Drupal::config('cwd_saml_mapping.config_form');
     $form['#cache'] = ['max-age' => 0];
-    
-    $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? false;
+
+    $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? FALSE;
     $is_prod_and_hide = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $hide_drupal_login_prod);
-    $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? false;
+    $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? FALSE;
 
     $sso_text = $config->getRawData()['sso_text'] ?? "Login with your NetID";
     $form['new'] = array(
@@ -276,13 +280,14 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
       '#weight' => -999,
     );
 
-    if($hide_drupal_login || $is_prod_and_hide) {
+    if ($hide_drupal_login || $is_prod_and_hide) {
       unset($form['name']);
       unset($form['pass']);
       unset($form['actions']);
       unset($form['#submit']);
       return;
-    } else {
+    }
+    else {
       $form['#submit'][] = 'cwd_saml_mapping_user_login_form_submit';
     }
 
@@ -291,11 +296,11 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
     $form['pass']['#weight'] = 9999;
     $form['actions']['#weight'] = 9999;
     $form['orstatement'] = array(
-      '#markup' => '<hr/><h2>'.$drupal_login_text.':</h2>',
+      '#markup' => '<hr/><h2>' . $drupal_login_text . ':</h2>',
       '#weight' => 9998,
     );
     unset($form['name']['#attributes']['autofocus']);
-    
+
   }
 }
 
@@ -304,7 +309,7 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
  */
 function cwd_saml_mapping_user_login_form_submit($form, FormStateInterface $form_state) {
   $current_path = \Drupal::service('path.current')->getPath();
-  if(empty($form_state->getRedirect())) {
+  if (empty($form_state->getRedirect())) {
     $current_path = Url::fromUserInput($current_path);
     $form_state->setRedirectUrl($current_path);
   }
@@ -313,13 +318,13 @@ function cwd_saml_mapping_user_login_form_submit($form, FormStateInterface $form
 
 function cwd_saml_mapping_local_tasks_alter(&$local_tasks) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
-  $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? false;
+  $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? FALSE;
   $is_prod_and_hide = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $hide_drupal_login_prod);
-  $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? false;
-   if($hide_drupal_login || $is_prod_and_hide) {
+  $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? FALSE;
+  if ($hide_drupal_login || $is_prod_and_hide) {
     unset($local_tasks['user.register']);
     unset($local_tasks['user.login']);
-   }
+  }
 }
 
 function cwd_saml_mapping_user_login(UserInterface $account) {
@@ -330,7 +335,7 @@ function cwd_saml_mapping_user_login(UserInterface $account) {
     return;
   }
   $entity_ids = \Drupal::entityQuery('saml_login_redirect')->condition('status', 1)->execute();
-  if($entity_ids == null) {
+  if ($entity_ids == NULL) {
     return;
   }
 
@@ -351,13 +356,13 @@ function cwd_saml_mapping_user_login(UserInterface $account) {
       \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $redirect);
       return;
     }
-  
+
   }
 }
 function cwd_saml_mapping_user_logout($account) {
 
   $entity_ids = \Drupal::entityQuery('saml_logout_redirect')->condition('status', 1)->execute();
-  if($entity_ids == null) {
+  if ($entity_ids == NULL) {
     return;
   }
 
@@ -378,7 +383,7 @@ function cwd_saml_mapping_user_logout($account) {
       \Drupal::service('request_stack')->getCurrentRequest()->query->set('destination', $redirect);
       return;
     }
-  
+
   }
 }
 
@@ -398,15 +403,15 @@ function _cwd_saml_mapping_return_token_url($redirect_string, $account) {
 
 function cwd_saml_mapping_preprocess_page(&$variables) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
-  $restrict_all_pages = $config->getRawData()['restrict_all_pages'] ?? false;
-  if($restrict_all_pages) {
+  $restrict_all_pages = $config->getRawData()['restrict_all_pages'] ?? FALSE;
+  if ($restrict_all_pages) {
     $allowed_paths = [
       "/user/login",
       "/accessdenied",
     ];
 
     $restriction_choice = $config->getRawData()['restrict_pages_url'];
-    switch($restriction_choice) {
+    switch ($restriction_choice) {
       case "direct":
         $url_string = "/saml/drupal_login";
         $samlsp_login_config = \Drupal::config('saml_sp_drupal_login.config');
@@ -414,7 +419,7 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
         if (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live') {
           $url_string .= "/" . $idps['cornell_prod'];
         }
-        else { 
+        else {
           $url_string .= "/" . $idps['cornell_test'];
         }
         break;
@@ -426,9 +431,9 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
 
     $current_user = \Drupal::currentUser();
     $current_path = \Drupal::service('path.current')->getPath();
-    $url_string .= "?returnTo=" .$current_path;
-    
-    if(!in_array($current_path,$allowed_paths) && $current_user->isAnonymous() ) {
+    $url_string .= "?returnTo=" . $current_path;
+
+    if (!in_array($current_path, $allowed_paths) && $current_user->isAnonymous()) {
       $response = new RedirectResponse($url_string);
       \Drupal::service('kernel')->rebuildContainer();
       $response->send();
