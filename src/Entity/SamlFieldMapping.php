@@ -43,6 +43,7 @@ use Drupal\cwd_saml_mapping\SamlFieldMappingInterface;
  *     "id",
  *     "label",
  *     "samlprop",
+ *     "samlother",
  *     "field",
  *   },
  * )
@@ -51,5 +52,6 @@ final class SamlFieldMapping extends ConfigEntityBase implements SamlFieldMappin
   protected string $id;
   protected string $label;
   protected string $samlprop;
+  protected string $samlother;
   protected string $field;
 }

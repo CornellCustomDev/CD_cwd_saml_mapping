@@ -15,9 +15,9 @@ final class SamlFieldMappingForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state): array {
-
+  public function form(array $form, FormStateInterface $form_state): array {    
     $form = parent::form($form, $form_state);
+    $form['#attached']['library'][] = 'cwd_saml_mapping/cwd_saml_mapping';
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -47,6 +47,12 @@ final class SamlFieldMappingForm extends EntityForm {
       '#title' => $this->t('SAML Property'),
       '#description' => $this->t('The property from shibboleth that will be used to fill in the selected field.'),
       '#default_value' => $this->entity->get('samlprop'),
+    ];
+    
+    $form['samlother'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('SAML Property Other (if SAML Property Other)'),
+      '#default_value' => $this->entity->get('samlother'),
     ];
 
     $form['field'] = [
