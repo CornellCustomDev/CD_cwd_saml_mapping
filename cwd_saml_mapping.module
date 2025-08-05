@@ -167,7 +167,6 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   
   foreach ($configs as $field_mapping_config) {
     $drupal_filed_id = $field_mapping_config->get('field');
-    $current_field_value = $user->{$drupal_filed_id}->getValue()[0]['value'];
 
     $saml_field = $field_mapping_config->get('samlprop');
     if($saml_field == "other") {
@@ -190,6 +189,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
       $new_field_value = $new_field_data[0];
     }
 
+    $current_field_value = $user->{$drupal_filed_id}->getValue()[0]['value'];
     $new_field_value = DataConversionHelper::processDataIntoFieldArray($drupal_filed_id, $field_type, $field_definition, $new_field_data);
 
     if ($current_field_value != $new_field_value) {
