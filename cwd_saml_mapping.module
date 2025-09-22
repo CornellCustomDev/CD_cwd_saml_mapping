@@ -425,12 +425,15 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
     }
 
     $current_user = \Drupal::currentUser();
+    if($current_user->isAnonymous() ) {
+      \Drupal::service('page_cache_kill_switch')->trigger();
+    }
     $current_path = \Drupal::service('path.current')->getPath();
     $url_string .= "?returnTo=" .$current_path;
     
     if(!in_array($current_path,$allowed_paths) && $current_user->isAnonymous() ) {
       $response = new RedirectResponse($url_string);
-      \Drupal::service('kernel')->rebuildContainer();
+      // \Drupal::service('kernel')->rebuildContainer();
       $response->send();
     }
   }
