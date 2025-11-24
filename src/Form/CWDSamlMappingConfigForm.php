@@ -132,6 +132,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
         "none" => "None",
         "login" => "Login Page",
         "direct" => "Direct to SSO",
+        "403" => "403 Page",
       ],
       '#title' => $this->t('When restricting pages what page should the user be sent to?'),
       '#default_value' => $config->get('restrict_pages_url') ?? "none",

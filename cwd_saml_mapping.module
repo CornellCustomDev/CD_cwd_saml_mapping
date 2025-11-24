@@ -418,6 +418,9 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
           $url_string .= "/" . $idps['cornell_test'];
         }
         break;
+      case "403":
+        $url_string = "/accessdenied";
+        break;
       case "login":
       default:
         $url_string = "/user/login";
