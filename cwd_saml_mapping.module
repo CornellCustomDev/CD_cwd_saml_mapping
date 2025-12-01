@@ -17,7 +17,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   //-------------------------------------------------------------------------------------
   //Get all our saml_role_mapping configs for processing
   $entity_ids = \Drupal::entityQuery('saml_role_mapping')->condition('status', 1)->execute();
-  $configs = \Drupal::entityTypeManager()->getStorage(entity_type_id: 'saml_role_mapping')->loadMultiple($entity_ids);
+  $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
   //Variables for storing data and signaling a user save is needed.
   $saveUser = FALSE;
   $samlManagedRoles = [];

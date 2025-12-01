@@ -144,7 +144,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     ];
     $form['role_management_settings']['remove_roles'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('By checking this box all any role mapped through SSO will remove roles if a user no longer meets the criteria.'),
+      '#title' => $this->t('The user's roles are assigned by mapping through SSO. By checking this box any manually added role is deleted upon user's log in, unless the user is present in that role’s uid list.'),
       '#default_value' => $config->get('remove_roles') ?? TRUE,
     ];
 
