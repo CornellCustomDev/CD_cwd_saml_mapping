@@ -1,0 +1,13 @@
+uuid: 9b00b2a3-3472-4fdd-9b76-e4ac08d8dc72
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: LQSnt-JZ8yPHkTqKhBfH8G4kU60SJMz12x9J4XW6yVI
+id: administrator_role_uid
+label: 'Administrator Role UID'
+role: administrator
+samlprop: 'urn:oid:0.9.2342.19200300.100.1.1'
+samlother: n/a
+values: "wfj24\r\nmrg264"
+specialmatchcriteria: none

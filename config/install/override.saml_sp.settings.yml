@@ -1,0 +1,33 @@
+_core:
+  default_config_hash: vp7bT6CCqeEH7ogm40LTW2695EypNjvT2yJzq_ItasI
+contact:
+  technical:
+    name: 'Bill Juda'
+    email: wfj24@cornell.edu
+  support:
+    name: 'Bill Juda'
+    email: wfj24@cornell.edu
+organization:
+  name: 'Cornell University'
+  display_name: 'Cornell University'
+  url: 'https://www.cornell.edu'
+strict: false
+security:
+  nameIdEncrypted: false
+  authnRequestsSigned: false
+  logoutRequestSigned: false
+  logoutResponseSigned: false
+  wantMessagesSigned: false
+  wantAssertionsSigned: false
+  wantNameIdEncrypted: false
+  signMetaData: false
+  signatureAlgorithm: 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
+  lowercaseUrlencoding: false
+  wantAssertionsEncrypted: 1
+cert_location: 'private://simplesaml/cert/saml.crt'
+key_location: 'private://simplesaml/cert/saml.pem'
+new_cert_location: ''
+entity_id: 'https://live-*.pantheonsite.io'
+valid_until: '<certificate>'
+debug: false
+assertion_urls: "https://dev-*.pantheonsite.io/saml/consume\r\nhttps://test-*.pantheonsite.io/saml/consume\r\nhttps://live-*.pantheonsite.io/saml/consume"

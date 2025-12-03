@@ -1,23 +1,112 @@
 <?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the cwd test module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function cwd_saml_mapping_install() {
+  $override_config = [
+    'saml_sp.settings',
+    'saml_sp_drupal_login.config',
+    'cwd_saml_mapping.config_form',
+  ];
+
+  $is_command_line = (php_sapi_name() === 'cli');
+  if (!$is_command_line) {
+    \Drupal::messenger()->addWarning('When installing this module from the web interface, you will need to manually configure your entity id and assertion urls.');
+  }
+  else {
+    echo "What is the Pantheon Machine Name of this site? ";
+    $input = rtrim(fgets(STDIN));
+    echo "I got it:\n" . $input;
+  }
+
+  
+  foreach ($override_config as $config) {
+    // Get your custom config
+    $cfg = \Drupal::configFactory()->getEditable('override.' . $config);
+    // Get Config object
+    if ($config == 'saml_sp.settings' && $is_command_line) {
+      $current = $cfg->get('assertion_urls');
+      $current = str_replace('*', $input, $current);
+      $cfg->set('assertion_urls', $current);
+      $entity_id = $cfg->get('entity_id');
+      $entity_id = str_replace('*', $input, $entity_id);
+      $cfg->set('entity_id', $entity_id);
+    }
+    $settings = \Drupal::configFactory()->getEditable($config);
+    // Override all data that can be overridden
+    $settings->setData($cfg->get())->save();
+    // Get rid of your custom config
+    $cfg->delete();
+  }
+
+  _output_instructions();
+
+  \Drupal::messenger()->addStatus(__FUNCTION__);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function cwd_saml_mapping_uninstall() {
+  \Drupal::messenger()->addStatus(__FUNCTION__);
+}
+
 /**
  * Update all saml_role_mapping entities to have new samlother and specialmatchcriteria values.
  */
 function cwd_saml_mapping_update_91001() {
-    $entity_ids = \Drupal::entityQuery('saml_role_mapping')->execute();
-    $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
-    foreach ($configs as $config) {
-        $config->set('samlother', 'n/a');
-        $config->set('specialmatchcriteria', 'none');
-        $config->save();
-    }
+  $entity_ids = \Drupal::entityQuery('saml_role_mapping')->execute();
+  $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
+  foreach ($configs as $config) {
+    $config->set('samlother', 'n/a');
+    $config->set('specialmatchcriteria', 'none');
+    $config->save();
+  }
 }
 
 /**
  * Register entities saml_login_redirect and saml_logout_redirect.
  */
 function cwd_saml_mapping_update_91002() {
-    $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_login_redirect');
-    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);  
-    $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_logout_redirect');
-    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);   
+  $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_login_redirect');
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);
+  $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_logout_redirect');
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);
+}
+
+
+function _get_instruction_array() {
+  return [
+    "This module requires the following Composer packages to be installed:\n",
+    "- composer require drupal/saml_sp cubear/cwd_saml_mapping\n\n",
+    "Create the certificate directory if it does not already exist:\n",
+    "- Run at doc root of repo\n",
+    "- mkdir -p web/sites/default/files/private/simplesaml/cert\n\n",
+    "After installation, be sure to regenerate your SSL certificates with the following command:\n",
+    "- openssl req -newkey rsa:3072 -new -x509 -days 3652 -nodes -out web/sites/default/files/private/simplesaml/cert/saml.crt -keyout web/sites/default/files/private/simplesaml/cert/saml.pem;\n\n",
+    "The paths for the certs which should be automatically configured for you:\n",
+    "- private://simplesaml/cert/saml.crt\n",
+    "- private://simplesaml/cert/saml.pem\n\n",
+    "YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
+    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
+    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
+  ];
+}
+
+function _output_instructions() {
+  $instructions = _get_instruction_array();
+  foreach ($instructions as $instruction) {
+    if (php_sapi_name() === 'cli') {
+      fwrite(STDOUT, $instruction);
+    }
+    else {
+      \Drupal::messenger()->addStatus($instruction);
+    }
+  }
 }

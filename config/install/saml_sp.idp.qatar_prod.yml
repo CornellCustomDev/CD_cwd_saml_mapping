@@ -1,0 +1,24 @@
+uuid: d4dce995-54aa-4468-a23c-219ea39a2a7e
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 3zxMmMNzSUwKZcZaGE9GqubSYOvre8rIxbpvkhHEWkI
+label: 'Weill Cornell Medicine - Qatar'
+id: qatar_prod
+entity_id: 'https://sts.windows.net/e6435811-18b2-4b9d-afa6-2d8e274d17aa/'
+app_name: ''
+nameid_field: unique_id
+login_url: 'https://login.microsoftonline.com/e6435811-18b2-4b9d-afa6-2d8e274d17aa/saml2'
+logout_url: 'https://login.microsoftonline.com/e6435811-18b2-4b9d-afa6-2d8e274d17aa/saml2'
+x509_cert:
+  0: MIIC8DCCAdigAwIBAgIQMVIVzbb8WIVJHnaMLj/AaTANBgkqhkiG9w0BAQsFADA0MTIwMAYDVQQDEylNaWNyb3NvZnQgQXp1cmUgRmVkZXJhdGVkIFNTTyBDZXJ0aWZpY2F0ZTAeFw0yNDA5MTcxMTA2MDJaFw0yNzA5MTcxMTA2MDJaMDQxMjAwBgNVBAMTKU1pY3Jvc29mdCBBenVyZSBGZWRlcmF0ZWQgU1NPIENlcnRpZmljYXRlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1DLDAr+nmF8oQpa8u4ovqGzn2O51nzZmPBTrCr6mbvYS5KqMqhCVXB0pliMuVnMiKEuE0oDqsLH1NkN9arwkJaKoXJ6YquOWV7p8i9G6jdTcW5zWTYkusHXr7jdSizxrT1xW9I7AfdvQaWs70hFDjHgKidS2iXkC36rwLxZqCM4eg2Fn8T5iOfPTYfDfcYtd76268T/QOn0zqTDxqSLMNk0jxbJqof93hRp3bNPDraE7Ye4e95q9GbbIdCym0RqVz28kUpG+PUR5tmJc8lyLAuBQBFB86TSkp07bknByfr6vr3dJfnxnnhUMtP/JWuDLPVKdlS0sH9bRFIbWkLyefQIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQAd0zpUzWrWes5+w2zDrQjX3j2EBMM4nFZED1KbVZgaYqz4Yly8vFMSJl3peJkgK3YBcjKm52v0UD4QMD8SCc1aSTileiuQfIgueY9tcMaIoQpiQbl3BbZY/atDz/rTvtyx9QSTsHlxu7h2QNiG1gKsXWooAzW7/qWctmKTJt/PjXswS2m+YHI+OH9W4+c8obS9321fq9zas3sF2J7Nbkr3kS7Zb/CMyx31u2YotjqPYzVr8YqQU1gAS+rfThVf1gINFKtirQb8iNF4z52ITldDwsYZD+w7KHoQ47bXZeoy/VMmO6d40vxu+H3272UlVpBrVE1ObXw4mAKixq4r6Mlw
+  1: ''
+  actions: {  }
+authn_context_class_ref:
+  user_name_and_password: '0'
+  password_protected_transport: '0'
+  tls_client: '0'
+  x509_certificate: '0'
+  integrated_windows_authentication: '0'
+  kerberos: '0'
