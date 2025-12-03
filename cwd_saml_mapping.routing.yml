@@ -44,7 +44,7 @@ entity.saml_field_mapping.collection:
   path: '/admin/config/people/cwd-saml-mapping-config/saml-field-mapping'
   defaults:
     _entity_list: 'saml_field_mapping'
-    _title: 'SAML Role Mapping configuration'
+    _title: 'SAML Field Mapping configuration'
   requirements:
     _permission: 'administer saml_field_mapping'
 

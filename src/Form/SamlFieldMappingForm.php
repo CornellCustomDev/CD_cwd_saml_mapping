@@ -15,9 +15,9 @@ final class SamlFieldMappingForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state): array {
-
+  public function form(array $form, FormStateInterface $form_state): array {    
     $form = parent::form($form, $form_state);
+    $form['#attached']['library'][] = 'cwd_saml_mapping/cwd_saml_mapping';
 
     $form['label'] = [
       '#type' => 'textfield',
@@ -38,7 +38,7 @@ final class SamlFieldMappingForm extends EntityForm {
 
     $saml_property_mapping = ShibbolethHelper::getMappingArray();
     $form['orstatement'] = array(
-      '#markup' => '<h2>Instructions</h2><ul><li>Please Note: we can only map saml properties into text/textarea fields.</li><li>Multi-valued fields in Shibboleth will be concatenated into a single string in Drupal.</li></ul>',
+      '#markup' => '<h2>Instructions</h2><ul><li>Please Note: there are a number of field processors to handle different types of fields but this is not all inclusive at this time.</li><li>Multi-valued fields in Shibboleth will be handled based on the field you are feeding into.</li></ul>',
     );
 
     $form['samlprop'] = [
@@ -47,6 +47,12 @@ final class SamlFieldMappingForm extends EntityForm {
       '#title' => $this->t('SAML Property'),
       '#description' => $this->t('The property from shibboleth that will be used to fill in the selected field.'),
       '#default_value' => $this->entity->get('samlprop'),
+    ];
+    
+    $form['samlother'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('SAML Property Other (if SAML Property Other)'),
+      '#default_value' => $this->entity->get('samlother'),
     ];
 
     $form['field'] = [

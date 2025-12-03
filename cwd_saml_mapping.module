@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\Core\Url;
+use Drupal\cwd_saml_mapping\DataConversionHelper;
 use Drupal\user\UserInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\cwd_saml_mapping\ShibbolethHelper;
@@ -168,18 +169,35 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   //-------------------------------------------------------------------------------------
   $entity_ids = \Drupal::entityQuery('saml_field_mapping')->condition('status', 1)->execute();
   $configs = \Drupal::entityTypeManager()->getStorage('saml_field_mapping')->loadMultiple($entity_ids);
+  $user_field_definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
+  
   foreach ($configs as $field_mapping_config) {
-    $current_field_value = $user->{$field_mapping_config->get('field')}->getValue()[0]['value'];
-    $new_field_data = $attributes[$field_mapping_config->get('samlprop')];
+    $drupal_filed_id = $field_mapping_config->get('field');
+
+    $saml_field = $field_mapping_config->get('samlprop');
+    if($saml_field == "other") {
+      $saml_field = $field_mapping_config->get('samlother');
+    }
+    $new_field_data = $attributes[$saml_field];
+    if(isset($user_field_definitions[$drupal_filed_id])) {
+      $field_definition = $user_field_definitions[$drupal_filed_id];
+      $field_type = $field_definition->getType();
+    }
+    else {
+      \Drupal::logger('cwd_saml_mapping')->warning("Field definition for {$drupal_filed_id} not found. Skipping mapping.");
+      continue;
+    }
+    
     if (empty($new_field_data)) {
       continue;
     }
-    if (count($new_field_data) > 1) {
-      $new_field_value = implode(", ", $new_field_data);
-    }
-    else {
+    if (count($new_field_data) == 1) {
       $new_field_value = $new_field_data[0];
     }
+
+    $current_field_value = $user->{$drupal_filed_id}->getValue()[0]['value'];
+    $new_field_value = DataConversionHelper::processDataIntoFieldArray($drupal_filed_id, $field_type, $field_definition, $new_field_data);
+
     if ($current_field_value != $new_field_value) {
       $user->{$field_mapping_config->get('field')} = $new_field_value;
       $saveUser = true;
