@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\File\FileExists;
+
 /**
  * @file
  * Install, update and uninstall functions for the cwd test module.
@@ -20,12 +22,27 @@ function cwd_saml_mapping_install() {
     \Drupal::messenger()->addWarning('When installing this module from the web interface, you will need to manually configure your entity id and assertion urls.');
   }
   else {
-    echo "What is the Pantheon Machine Name of this site? ";
-    $input = rtrim(fgets(STDIN));
-    echo "I got it:\n" . $input;
+    $confirmed = 'n';
+    // do until confirmed is y
+    while ($confirmed != 'y') {
+      fwrite(STDOUT, "Enter the panteon machine name for your SAML configuration: ");
+      $input = trim(fgets(STDIN));
+      fwrite(STDOUT, "Enter the email of the responsible party for your SAML configuration: ");
+      $email = trim(fgets(STDIN));
+      fwrite(STDOUT, "Enter the domain name for your SAML configuration: ");
+      $domain = trim(fgets(STDIN));
+      fwrite(STDOUT, "You entered pantheon machine name: " . $input . "\n");
+      fwrite(STDOUT, "You entered email: " . $email . "\n");
+      fwrite(STDOUT, "You entered domain name: " . $domain . "\n");
+      fwrite(STDOUT, "Is this correct? (y/n): ");
+      $confirmed = trim(fgets(STDIN));
+    }
   }
 
-  
+  if(empty($input)) {
+    $input = "*";
+  }
+
   foreach ($override_config as $config) {
     // Get your custom config
     $cfg = \Drupal::configFactory()->getEditable('override.' . $config);
@@ -45,7 +62,13 @@ function cwd_saml_mapping_install() {
     $cfg->delete();
   }
 
-  _output_instructions();
+  if(empty($email)) {
+    $email = "admin@cornell.edu";
+  }
+  if(empty($domain)) {
+    $domain = "cornell.edu";
+  }
+  _generate_ssl_certificates_with_php($email, $domain);
 
   \Drupal::messenger()->addStatus(__FUNCTION__);
 }
@@ -108,5 +131,56 @@ function _output_instructions() {
     else {
       \Drupal::messenger()->addStatus($instruction);
     }
+  }
+}
+
+function _generate_ssl_certificates_with_php($email = "admin@cornell.edu", $domain = "cornell.edu") {
+  $config = [
+    "digest_alg" => "sha256",
+    "private_key_bits" => 3072,
+    "private_key_type" => OPENSSL_KEYTYPE_RSA,
+  ];
+
+  $dn = [
+    "countryName" => "US",
+    "stateOrProvinceName" => "New York",
+    "localityName" => "Ithaca",
+    "organizationName" => "Cornell University",
+    "organizationalUnitName" => "Cornell University",
+    "commonName" => $domain,
+    "emailAddress" => $email,
+  ];
+
+  // Create the private and public key
+  $res = openssl_pkey_new($config);
+  // Generate a certificate signing request
+  $csr = openssl_csr_new($dn, $res, $config);
+
+  // Self-sign the certificate
+  $x509 = openssl_csr_sign($csr, NULL, $res, 3652, $config);
+
+  openssl_x509_export($x509, $certout);
+  openssl_pkey_export($res, $pkeyout);
+
+  // drupal put file in private://simplesaml2/cert/ using FileStorage
+  $file_system = \Drupal::service('file_system');
+  // create directory if it does not exist
+  $directory = 'private://simplesaml/cert/';
+  if (!file_exists($file_system->realpath($directory))) {
+    $file_system->mkdir($directory, 0700, TRUE);
+  }
+  // drupal save file to directory do not use file_save_data.
+  $cert_file = $file_system->saveData($certout, $directory . 'saml.crt', FileExists::Replace);
+  $key_file = $file_system->saveData($pkeyout, $directory . 'saml.pem', FileExists::Replace);
+
+  if (php_sapi_name() === 'cli') {
+    fwrite(STDOUT, "Generated SSL certificates at:\n");
+    fwrite(STDOUT, "- " . $directory . 'saml.crt' . "\n");
+    fwrite(STDOUT, "- " . $directory . 'saml.pem' . "\n");
+  }
+  else {
+    \Drupal::messenger()->addStatus("Generated SSL certificates at:\n");
+    \Drupal::messenger()->addStatus("- " . $directory . 'saml.crt' . "\n");
+    \Drupal::messenger()->addStatus("- " . $directory . 'saml.pem' . "\n");
   }
 }
