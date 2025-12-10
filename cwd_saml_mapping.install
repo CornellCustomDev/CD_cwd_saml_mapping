@@ -39,7 +39,7 @@ function cwd_saml_mapping_install() {
     }
   }
 
-  if(empty($input)) {
+  if (empty($input)) {
     $input = "*";
   }
 
@@ -62,13 +62,20 @@ function cwd_saml_mapping_install() {
     $cfg->delete();
   }
 
-  if(empty($email)) {
+  if (empty($email)) {
     $email = "admin@cornell.edu";
   }
-  if(empty($domain)) {
+  if (empty($domain)) {
     $domain = "cornell.edu";
   }
-  _generate_ssl_certificates_with_php($email, $domain);
+
+  if ($is_command_line) {
+    _generate_ssl_certificates_with_php($email, $domain);
+    _output_instructions_cli();
+  }
+  else {
+    _output_instructions_web();
+  }
 
   \Drupal::messenger()->addStatus(__FUNCTION__);
 }
@@ -104,10 +111,21 @@ function cwd_saml_mapping_update_91002() {
 }
 
 
-function _get_instruction_array() {
-  return [
-    "This module requires the following Composer packages to be installed:\n",
-    "- composer require drupal/saml_sp cubear/cwd_saml_mapping\n\n",
+
+
+function _output_instructions_cli() {
+  $instructions = [
+    "YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
+    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
+    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
+  ];
+  foreach ($instructions as $instruction) {
+    fwrite(STDOUT, $instruction);
+  }
+}
+
+function _output_instructions_web() {
+  $instructions = [
     "Create the certificate directory if it does not already exist:\n",
     "- Run at doc root of repo\n",
     "- mkdir -p web/sites/default/files/private/simplesaml/cert\n\n",
@@ -120,17 +138,8 @@ function _get_instruction_array() {
     "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
     "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
   ];
-}
-
-function _output_instructions() {
-  $instructions = _get_instruction_array();
   foreach ($instructions as $instruction) {
-    if (php_sapi_name() === 'cli') {
-      fwrite(STDOUT, $instruction);
-    }
-    else {
-      \Drupal::messenger()->addStatus($instruction);
-    }
+    \Drupal::messenger()->addStatus($instruction);
   }
 }
 
