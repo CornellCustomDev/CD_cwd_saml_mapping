@@ -10,5 +10,5 @@ drupal_login_text: 'Log into Drupal'
 403_custom_text: "<p>Only certain individuals within the Cornell community can view this information. Please log in to see if you have access.</p>\r\n<p><strong>All Testers: please log in using Cornell Prod Login</strong></p>"
 403_custom_logged_in_text: '<p>Only certain individuals within the Cornell community can view this information. Please contact the site administrator to gain access to this page.</p>'
 local_login_text: 'Log in'
-restrict_all_pages: 1
-restrict_pages_url: '403'
+restrict_all_pages: 0
+restrict_pages_url: ''
