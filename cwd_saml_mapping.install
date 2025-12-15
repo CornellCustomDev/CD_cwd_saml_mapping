@@ -92,7 +92,7 @@ function _get_instructions() {
   ];
 }
 
-function _generate_ssl_certificates_with_php() {
+function _generate_ssl_certificates_with_php($overwrite = FALSE) {
   $config = [
     "digest_alg" => "sha256",
     "private_key_bits" => 3072,
@@ -116,23 +116,35 @@ function _generate_ssl_certificates_with_php() {
 
   // drupal put file in private://simplesaml/cert/
   $file_system = \Drupal::service('file_system');
-  // create directory if it does not exist
   $directory = 'private://simplesaml/cert/';
   if (!file_exists($file_system->realpath($directory))) {
     $file_system->mkdir($directory, 0700, TRUE);
   }
-  // drupal save file to directory do not use file_save_data.
-  $cert_file = $file_system->saveData($certout, $directory . 'saml.crt', FileExists::Replace);
-  $key_file = $file_system->saveData($pkeyout, $directory . 'saml.pem', FileExists::Replace);
 
-  if (php_sapi_name() === 'cli') {
-    fwrite(STDOUT, "Generated SSL certificates at:\n");
-    fwrite(STDOUT, "- " . $directory . 'saml.crt' . "\n");
-    fwrite(STDOUT, "- " . $directory . 'saml.pem' . "\n");
+  $cert_file_path = $directory . 'saml.crt';
+  if ($overwrite || !file_exists($file_system->realpath($cert_file_path))) {
+    $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Replace);
   }
   else {
-    \Drupal::messenger()->addStatus("Generated SSL certificates at:\n");
-    \Drupal::messenger()->addStatus("- " . $directory . 'saml.crt' . "\n");
-    \Drupal::messenger()->addStatus("- " . $directory . 'saml.pem' . "\n");
+    $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Rename);
+  }
+
+  $key_file_path = $directory . 'saml.pem';
+  if ($overwrite || !file_exists($file_system->realpath($key_file_path))) {
+    $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Replace);
+  }
+  else {
+    $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Rename);
+  }  
+
+  if (php_sapi_name() === 'cli') {
+    fwrite(STDOUT, "Generated SSL certificates at you may need to update this certificate in your saml configuration:\n");
+    fwrite(STDOUT, "- " . $cert_file . "\n");
+    fwrite(STDOUT, "- " . $key_file . "\n\n");
+  }
+  else {
+    \Drupal::messenger()->addStatus("Generated SSL certificates at you may need to update this certificate in your saml configuration:\n");
+    \Drupal::messenger()->addStatus("- " . $cert_file . "\n");
+    \Drupal::messenger()->addStatus("- " . $key_file . "\n\n");
   }
 }
