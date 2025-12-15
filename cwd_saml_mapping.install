@@ -17,44 +17,9 @@ function cwd_saml_mapping_install() {
     'cwd_saml_mapping.config_form',
   ];
 
-  $is_command_line = (php_sapi_name() === 'cli');
-  if (!$is_command_line) {
-    \Drupal::messenger()->addWarning('When installing this module from the web interface, you will need to manually configure your entity id and assertion urls.');
-  }
-  else {
-    $confirmed = 'n';
-    // do until confirmed is y
-    while ($confirmed != 'y') {
-      fwrite(STDOUT, "Enter the panteon machine name for your SAML configuration: ");
-      $input = trim(fgets(STDIN));
-      fwrite(STDOUT, "Enter the email of the responsible party for your SAML configuration: ");
-      $email = trim(fgets(STDIN));
-      fwrite(STDOUT, "Enter the domain name for your SAML configuration: ");
-      $domain = trim(fgets(STDIN));
-      fwrite(STDOUT, "You entered pantheon machine name: " . $input . "\n");
-      fwrite(STDOUT, "You entered email: " . $email . "\n");
-      fwrite(STDOUT, "You entered domain name: " . $domain . "\n");
-      fwrite(STDOUT, "Is this correct? (y/n): ");
-      $confirmed = trim(fgets(STDIN));
-    }
-  }
-
-  if (empty($input)) {
-    $input = "*";
-  }
-
   foreach ($override_config as $config) {
     // Get your custom config
     $cfg = \Drupal::configFactory()->getEditable('override.' . $config);
-    // Get Config object
-    if ($config == 'saml_sp.settings' && $is_command_line) {
-      $current = $cfg->get('assertion_urls');
-      $current = str_replace('*', $input, $current);
-      $cfg->set('assertion_urls', $current);
-      $entity_id = $cfg->get('entity_id');
-      $entity_id = str_replace('*', $input, $entity_id);
-      $cfg->set('entity_id', $entity_id);
-    }
     $settings = \Drupal::configFactory()->getEditable($config);
     // Override all data that can be overridden
     $settings->setData($cfg->get())->save();
@@ -62,15 +27,9 @@ function cwd_saml_mapping_install() {
     $cfg->delete();
   }
 
-  if (empty($email)) {
-    $email = "admin@cornell.edu";
-  }
-  if (empty($domain)) {
-    $domain = "cornell.edu";
-  }
-
+  _generate_ssl_certificates_with_php();
+  $is_command_line = (php_sapi_name() === 'cli');
   if ($is_command_line) {
-    _generate_ssl_certificates_with_php($email, $domain);
     _output_instructions_cli();
   }
   else {
@@ -110,40 +69,30 @@ function cwd_saml_mapping_update_91002() {
   \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);
 }
 
-
-
-
 function _output_instructions_cli() {
-  $instructions = [
-    "YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
-    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
-    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
-  ];
+  $instructions = _get_instructions();
   foreach ($instructions as $instruction) {
     fwrite(STDOUT, $instruction);
   }
 }
 
 function _output_instructions_web() {
-  $instructions = [
-    "Create the certificate directory if it does not already exist:\n",
-    "- Run at doc root of repo\n",
-    "- mkdir -p web/sites/default/files/private/simplesaml/cert\n\n",
-    "After installation, be sure to regenerate your SSL certificates with the following command:\n",
-    "- openssl req -newkey rsa:3072 -new -x509 -days 3652 -nodes -out web/sites/default/files/private/simplesaml/cert/saml.crt -keyout web/sites/default/files/private/simplesaml/cert/saml.pem;\n\n",
-    "The paths for the certs which should be automatically configured for you:\n",
-    "- private://simplesaml/cert/saml.crt\n",
-    "- private://simplesaml/cert/saml.pem\n\n",
-    "YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
-    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
-    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
-  ];
+  $instructions = _get_instructions();
   foreach ($instructions as $instruction) {
     \Drupal::messenger()->addStatus($instruction);
   }
 }
 
-function _generate_ssl_certificates_with_php($email = "admin@cornell.edu", $domain = "cornell.edu") {
+function _get_instructions() {
+  return [
+    "If you are not running this in a Pantheon evironement: YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
+    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
+    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
+    "You will need to update /admin/config/people/saml_sp with the correct Entity ID and Assertion Consumer Service URL.\n\n",
+  ];
+}
+
+function _generate_ssl_certificates_with_php() {
   $config = [
     "digest_alg" => "sha256",
     "private_key_bits" => 3072,
@@ -152,12 +101,6 @@ function _generate_ssl_certificates_with_php($email = "admin@cornell.edu", $doma
 
   $dn = [
     "countryName" => "US",
-    "stateOrProvinceName" => "New York",
-    "localityName" => "Ithaca",
-    "organizationName" => "Cornell University",
-    "organizationalUnitName" => "Cornell University",
-    "commonName" => $domain,
-    "emailAddress" => $email,
   ];
 
   // Create the private and public key
@@ -171,7 +114,7 @@ function _generate_ssl_certificates_with_php($email = "admin@cornell.edu", $doma
   openssl_x509_export($x509, $certout);
   openssl_pkey_export($res, $pkeyout);
 
-  // drupal put file in private://simplesaml2/cert/ using FileStorage
+  // drupal put file in private://simplesaml/cert/
   $file_system = \Drupal::service('file_system');
   // create directory if it does not exist
   $directory = 'private://simplesaml/cert/';
