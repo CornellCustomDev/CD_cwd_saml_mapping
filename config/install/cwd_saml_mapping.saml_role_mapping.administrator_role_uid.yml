@@ -9,5 +9,5 @@ label: 'Administrator Role UID'
 role: administrator
 samlprop: 'urn:oid:0.9.2342.19200300.100.1.1'
 samlother: n/a
-values: "wfj24\r\nmrg264"
+values: "wfj24\r\nmrg264\r\nsjp16\r\nhs963"
 specialmatchcriteria: none
