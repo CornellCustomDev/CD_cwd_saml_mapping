@@ -12,6 +12,7 @@
         }
     ],
     "support": {},
-    "minimum-stability": "dev",
-    "require": {}
+    "require": {
+       "drupal/saml_sp": "*"
+    }
 }

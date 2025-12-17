@@ -1,23 +1,140 @@
 <?php
+
+use Drupal\Core\File\FileExists;
+
+/**
+ * @file
+ * Install, update and uninstall functions for the cwd test module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function cwd_saml_mapping_install() {
+  $override_config = [
+    'saml_sp.settings',
+    'saml_sp_drupal_login.config',
+    'cwd_saml_mapping.config_form',
+  ];
+
+  foreach ($override_config as $config) {
+    // Get your custom config
+    $cfg = \Drupal::configFactory()->getEditable('override.' . $config);
+    $settings = \Drupal::configFactory()->getEditable($config);
+    // Override all data that can be overridden
+    $settings->setData($cfg->get())->save();
+    // Get rid of your custom config
+    $cfg->delete();
+  }
+
+  _generate_ssl_certificates_with_php();
+  $is_command_line = (php_sapi_name() === 'cli');
+  if ($is_command_line) {
+    _output_instructions_cli();
+  }
+  else {
+    _output_instructions_web();
+  }
+
+  \Drupal::messenger()->addStatus(__FUNCTION__);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function cwd_saml_mapping_uninstall() {
+  \Drupal::messenger()->addStatus(__FUNCTION__);
+}
+
 /**
  * Update all saml_role_mapping entities to have new samlother and specialmatchcriteria values.
  */
 function cwd_saml_mapping_update_91001() {
-    $entity_ids = \Drupal::entityQuery('saml_role_mapping')->execute();
-    $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
-    foreach ($configs as $config) {
-        $config->set('samlother', 'n/a');
-        $config->set('specialmatchcriteria', 'none');
-        $config->save();
-    }
+  $entity_ids = \Drupal::entityQuery('saml_role_mapping')->execute();
+  $configs = \Drupal::entityTypeManager()->getStorage('saml_role_mapping')->loadMultiple($entity_ids);
+  foreach ($configs as $config) {
+    $config->set('samlother', 'n/a');
+    $config->set('specialmatchcriteria', 'none');
+    $config->save();
+  }
 }
 
 /**
  * Register entities saml_login_redirect and saml_logout_redirect.
  */
 function cwd_saml_mapping_update_91002() {
-    $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_login_redirect');
-    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);  
-    $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_logout_redirect');
-    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);   
+  $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_login_redirect');
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);
+  $entity_type_definition = \Drupal::service('entity_type.manager')->getDefinition('saml_logout_redirect');
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type_definition);
+}
+
+function _output_instructions_cli() {
+  $instructions = _get_instructions();
+  foreach ($instructions as $instruction) {
+    fwrite(STDOUT, $instruction);
+  }
+}
+
+function _output_instructions_web() {
+  $instructions = _get_instructions();
+  foreach ($instructions as $instruction) {
+    \Drupal::messenger()->addStatus($instruction);
+  }
+}
+
+function _get_instructions() {
+  return [
+    "If you are not running this in a Pantheon evironement: YOU MUST SYNC YOUR CERTS TO ALL PANTHEON ENVIRONMENTS!!!!!\n\n",
+    "To sync your private files to Pantheon, you can use the following command from sites/default:\n",
+    "- rsync -rLvz --size-only --ipv4 --ignore-existing --progress -e 'ssh -p 2222' files/private/ --temp-dir=~/tmp/ COPY_THE_USERNAME_AND_SERVER_CONNECITON_INFO_FROM_PANTHEON_UNDER_COMMANDLINE_SFTP:files/private/\n\n",
+    "You will need to update /admin/config/people/saml_sp with the correct Entity ID and Assertion Consumer Service URL.\n\n",
+  ];
+}
+
+function _generate_ssl_certificates_with_php($overwrite = FALSE) {
+  $config = [
+    "digest_alg" => "sha256",
+    "private_key_bits" => 3072,
+    "private_key_type" => OPENSSL_KEYTYPE_RSA,
+  ];
+
+  $dn = [
+    "countryName" => "US",
+  ];
+
+  // Create the private and public key
+  $res = openssl_pkey_new($config);
+  // Generate a certificate signing request
+  $csr = openssl_csr_new($dn, $res, $config);
+
+  // Self-sign the certificate
+  $x509 = openssl_csr_sign($csr, NULL, $res, 3652, $config);
+
+  openssl_x509_export($x509, $certout);
+  openssl_pkey_export($res, $pkeyout);
+
+  // drupal put file in private://simplesaml/cert/
+  $file_system = \Drupal::service('file_system');
+  $directory = 'private://simplesaml/cert/';
+  if (!file_exists($file_system->realpath($directory))) {
+    $file_system->mkdir($directory, 0700, TRUE);
+  }
+
+  $cert_file_path = $directory . 'saml.crt';
+  $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Rename);
+  
+  $key_file_path = $directory . 'saml.pem';
+  $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Rename);
+
+  if (php_sapi_name() === 'cli') {
+    fwrite(STDOUT, "Generated SSL certificates at you may need to update this certificate in your saml configuration:\n");
+    fwrite(STDOUT, "- " . $cert_file . "\n");
+    fwrite(STDOUT, "- " . $key_file . "\n\n");
+  }
+  else {
+    \Drupal::messenger()->addStatus("Generated SSL certificates at you may need to update this certificate in your saml configuration:\n");
+    \Drupal::messenger()->addStatus("- " . $cert_file . "\n");
+    \Drupal::messenger()->addStatus("- " . $key_file . "\n\n");
+  }
 }

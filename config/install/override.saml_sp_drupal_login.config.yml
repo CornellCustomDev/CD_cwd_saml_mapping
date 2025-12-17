@@ -1,0 +1,15 @@
+_core:
+  default_config_hash: 2zZN4uSF3-mFQG6tPzEd9TeD9ICqraz64kVLW2OeqtU
+idp:
+  cornell_prod: cornell_prod
+  cornell_test: cornell_test
+logout: false
+logged_in_redirect: '<front>'
+update_email: true
+update_language: false
+no_account_authenticated_user_role: false
+no_account_authenticated_user_account: null
+force_authentication: false
+force_saml_only: false
+account_request_request_account: false
+account_request_create_account: true

@@ -5,3 +5,4 @@ package: Custom
 core_version_requirement: ^10 || ^11
 dependencies:
   - saml_sp:saml_sp
+  - saml_sp_drupal_login:saml_sp_drupal_login
