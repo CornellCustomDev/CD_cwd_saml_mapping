@@ -122,20 +122,10 @@ function _generate_ssl_certificates_with_php($overwrite = FALSE) {
   }
 
   $cert_file_path = $directory . 'saml.crt';
-  if ($overwrite || !file_exists($file_system->realpath($cert_file_path))) {
-    $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Replace);
-  }
-  else {
-    $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Rename);
-  }
-
+  $cert_file = $file_system->saveData($certout, $cert_file_path, FileExists::Rename);
+  
   $key_file_path = $directory . 'saml.pem';
-  if ($overwrite || !file_exists($file_system->realpath($key_file_path))) {
-    $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Replace);
-  }
-  else {
-    $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Rename);
-  }  
+  $key_file = $file_system->saveData($pkeyout, $key_file_path, FileExists::Rename);
 
   if (php_sapi_name() === 'cli') {
     fwrite(STDOUT, "Generated SSL certificates at you may need to update this certificate in your saml configuration:\n");
