@@ -246,7 +246,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
   $show_all_idps = $config->getRawData()['show_all_idps'];
 
-  if ($show_all_idps && TRUE) {
+  if ($show_all_idps) {
     foreach ($variables['items'] as $index => $link) {
       $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? NULL;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
