@@ -17,7 +17,7 @@ function cwd_saml_mapping_saml_sp_drupal_login_user_attributes_alter($user, $att
   // Logic for adding and removing users from roles via saml_role_mapping config entities
   //-------------------------------------------------------------------------------------
   $top_level_config = \Drupal::config('cwd_saml_mapping.config_form');
-  $domains_to_remove_role_access = $top_level_config->getRawData()['domains_to_remove_role_access'] ?? [];
+  $domains_to_remove_role_access = $top_level_config->getRawData()['domains_to_remove_role_access'] ?? "";
   $domains_to_remove_role_access_array = array_map('trim', explode("\n", $domains_to_remove_role_access));
   $current_domain = \Drupal::request()->getHost();
 
