@@ -234,7 +234,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
     foreach ($variables['items'] as $index => $link) {
       $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? null;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
-      $link['value']->setText(new TranslatableMarkup($idp_name . " Login"));
+      $link['value']->setText(new TranslatableMarkup($idp_name));
       $link['attributes']->addClass(['login-link-button', $idp_class]);
     }
     return;
@@ -258,7 +258,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
       }
       else {
         $friendly_name = str_replace(" Prod", "", $idp_name);
-        $link['value']->setText(new TranslatableMarkup($friendly_name . " Login"));
+        $link['value']->setText(new TranslatableMarkup($friendly_name));
         $link['attributes']->addClass(['login-link-button', $idp_class]);
       }
     }
@@ -278,7 +278,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
         unset($variables['items'][$index]);
       }
       else {
-        $link['value']->setText(new TranslatableMarkup($idp_name . " Login"));
+        $link['value']->setText(new TranslatableMarkup($idp_name));
         $link['attributes']->addClass(['login-link-button', $idp_class]);
       }
     }
