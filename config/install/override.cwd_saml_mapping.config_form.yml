@@ -12,3 +12,4 @@ drupal_login_text: 'Log into Drupal'
 local_login_text: 'Log in'
 restrict_all_pages: 0
 restrict_pages_url: ''
+domains_to_remove_role_access: ''

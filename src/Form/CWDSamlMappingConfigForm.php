@@ -138,6 +138,20 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
       '#default_value' => $config->get('restrict_pages_url') ?? "none",
     ];
 
+    //text area for all domains to remove role access
+    $form['role_removal_settings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Role Removal Settings'),
+      '#open' => TRUE,
+    ];
+    $form['role_removal_settings']['domains_to_remove_role_access'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('List of domains that will have role access removed (one domain per line)'),
+      '#description' => $this->t('Enter each domain on a new line. Example: example.edu'),
+      '#default_value' => $config->get('domains_to_remove_role_access'),
+      '#rows' => 5,
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
