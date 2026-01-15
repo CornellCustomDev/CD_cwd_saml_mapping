@@ -234,7 +234,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
     foreach ($variables['items'] as $index => $link) {
       $idp_name = $link['value']->getText()->getArguments()['%idp'] ?? null;
       $idp_class = strtolower(preg_replace("/\s+/", "_", $idp_name));
-      $link['value']->setText(new TranslatableMarkup($idp_name . " Login"));
+      $link['value']->setText(new TranslatableMarkup(_get_fancy_cornell_names($idp_name)));
       $link['attributes']->addClass(['login-link-button', $idp_class]);
     }
     return;
@@ -257,8 +257,8 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
         unset($variables['items'][$index]);
       }
       else {
-        $friendly_name = str_replace(" Prod", "", $idp_name);
-        $link['value']->setText(new TranslatableMarkup($friendly_name . " Login"));
+        $friendly_name = _get_fancy_cornell_names(str_replace(" Prod", "", $idp_name));
+        $link['value']->setText(new TranslatableMarkup($friendly_name));
         $link['attributes']->addClass(['login-link-button', $idp_class]);
       }
     }
@@ -278,7 +278,7 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
         unset($variables['items'][$index]);
       }
       else {
-        $link['value']->setText(new TranslatableMarkup($idp_name . " Login"));
+        $link['value']->setText(new TranslatableMarkup(_get_fancy_cornell_names($idp_name)));
         $link['attributes']->addClass(['login-link-button', $idp_class]);
       }
     }
@@ -466,3 +466,13 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
   }
 }
 
+function _get_fancy_cornell_names($string) {
+  if(str_contains($string, "Weill Cornell Medicine - Qatar")) {
+    $string = str_replace("Weill Cornell Medicine - Qatar", "Weill Cornell Medicine-Qatar", $string);
+  } elseif(str_contains($string, "Cornell")) {
+    $string = str_replace("Cornell", "Cornell NetID", $string);
+  } elseif(str_contains ($string, "Weill")) {
+    $string = str_replace("Weill", "Weill Cornell Medicine CWID", $string);
+  }   
+  return $string;
+}
