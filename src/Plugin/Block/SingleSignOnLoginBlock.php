@@ -24,7 +24,7 @@ final class SingleSignOnLoginBlock extends BlockBase {
    */
   public function defaultConfiguration(): array {
     return [
-      'block_text' => $this->t('Hello world!'),
+      'block_text' => $this->t('You must log in to view this content.'),
     ];
   }
 
