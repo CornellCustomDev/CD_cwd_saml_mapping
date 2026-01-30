@@ -20,3 +20,11 @@ cwd_saml_mapping.saml_role_mapping.*:
       type: string
     specialmatchcriteria:
       type: string
+
+block.settings.cwd_saml_mapping_single_sign_on_login_block:
+  type: block_settings
+  label: 'Single Sign-On Login Block block'
+  mapping:
+    block_text:
+      type: string
+      label: Block Text
