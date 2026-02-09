@@ -32,8 +32,10 @@ final class SingleSignOnLoginBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function blockForm($form, FormStateInterface $form_state): array {
+    // add ckeditor basic html textarea
     $form['block_text'] = [
       '#type' => 'text_format',
+      // formatter
       '#title' => $this->t('Block Text'),
       '#default_value' => $this->configuration['block_text'],
     ];
@@ -52,22 +54,48 @@ final class SingleSignOnLoginBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build(): array {
+    // set cache to none
+
+    // load config saml_sp_drupal_login_settings
     $configs = \Drupal::config('saml_sp_drupal_login.config');
+    // get values
     $values = $configs->getRawData();
     $idps = array_filter($values['idp']);
     $current_path = $this->calculateCurrentPath();
-    foreach ($idps as $idp_key => $idp_value) {
-      $login_url = '/saml/drupal_login/' . $idp_key;
-      $idp_config = \Drupal::config('saml_sp.idp.' . $idp_key);
-      $stored_name = $idp_config->getRawData()['label'];
-      $fancy_name = _get_fancy_cornell_names($stored_name);
-      $link_markup = '<a href="' . $login_url . '?returnTo=' . $current_path . '"> ' . $fancy_name . ' </a>';
-      $links[] = $link_markup;
+    $cwd_saml_mapping_config = \Drupal::config('cwd_saml_mapping.config_form');
+    $show_all_idps = $cwd_saml_mapping_config->getRawData()['show_all_idps'];
 
+    if ($show_all_idps == TRUE) {
+      foreach ($idps as $idp_key => $idp_value) {
+        $links[] = $this->_create_login_link($idp_key, $current_path);
+      }
     }
-    $markup = '';
+    else {
+      $use_saml_in_prod = $cwd_saml_mapping_config->getRawData()['use_prod_in_saml'];
+      $is_prod_and_use_prod_shibboleth = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $use_saml_in_prod);
+      $is_prod_and_use_prod_shibboleth = true;
+      if ($is_prod_and_use_prod_shibboleth) {
+        foreach ($idps as $idp_key => $idp_value) {
+          if (str_contains($idp_key, 'test')) {
+            continue;
+          }
+          $links[] = $this->_create_login_link($idp_key, $current_path);
+        }
+      }
+      else {
+        foreach ($idps as $idp_key => $idp_value) {
+          if (str_contains($idp_key, 'prod')) {
+            continue;
+          }
+          $links[] = $this->_create_login_link($idp_key, $current_path);
+        }
+      }
+    }
 
-    $markup = '<ul class="login-links"><li>' . implode('</li><li>', $links) . '</li></ul>';
+    $markup = '';
+    if (!empty($links)) {
+      $markup = '<ul class="login-links"><li>' . implode('</li><li>', $links) . '</li></ul>';
+    }
     if (!empty($this->configuration['block_text'])) {
       $markup = '<div class="block-text">' . $this->configuration['block_text'] . $markup . '</div>';
     }
@@ -91,4 +119,14 @@ final class SingleSignOnLoginBlock extends BlockBase {
     $final_path = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
     return $final_path;
   }
+
+  public function _create_login_link($idp_key, $current_path) {
+    $login_url = '/saml/drupal_login/' . $idp_key;
+    $idp_config = \Drupal::config('saml_sp.idp.' . $idp_key);
+    $stored_name = $idp_config->getRawData()['label'];
+    $fancy_name = _get_fancy_cornell_names($stored_name);
+    $link_markup = '<a href="' . $login_url . '?returnTo=' . $current_path . '"> ' . $fancy_name . ' </a>';
+    return $link_markup;
+  }
 }
+
