@@ -73,7 +73,6 @@ final class SingleSignOnLoginBlock extends BlockBase {
     else {
       $use_saml_in_prod = $cwd_saml_mapping_config->getRawData()['use_prod_in_saml'];
       $is_prod_and_use_prod_shibboleth = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $use_saml_in_prod);
-      $is_prod_and_use_prod_shibboleth = true;
       if ($is_prod_and_use_prod_shibboleth) {
         foreach ($idps as $idp_key => $idp_value) {
           if (str_contains($idp_key, 'test')) {
