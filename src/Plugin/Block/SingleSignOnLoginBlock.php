@@ -124,6 +124,7 @@ final class SingleSignOnLoginBlock extends BlockBase {
     $idp_config = \Drupal::config('saml_sp.idp.' . $idp_key);
     $stored_name = $idp_config->getRawData()['label'];
     $fancy_name = _get_fancy_cornell_names($stored_name);
+    $fancy_name = str_replace(' Prod', '', $fancy_name);
     $link_markup = '<a href="' . $login_url . '?returnTo=' . $current_path . '"> ' . $fancy_name . ' </a>';
     return $link_markup;
   }
