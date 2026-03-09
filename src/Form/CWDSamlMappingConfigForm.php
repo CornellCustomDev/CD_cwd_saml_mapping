@@ -48,7 +48,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     ];
     $form['customize_links']['use_prod_in_saml'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Use Production Shibboleth on the Live/Production site.'),
+      '#title' => $this->t('Use Production Shibboleth on all Assertion Consumer URLs. Once your site is launched this should always be enabled.'),
       '#default_value' => $config->get('use_prod_in_saml'),
     ];
     $form['customize_links']['show_all_idps'] = [
