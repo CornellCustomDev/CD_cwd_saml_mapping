@@ -257,7 +257,8 @@ function cwd_saml_mapping_preprocess_item_list(&$variables) {
   }
 
   $use_saml_in_prod = $config->getRawData()['use_prod_in_saml'];
-  $is_prod_and_use_prod_shibboleth = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $use_saml_in_prod);
+  $use_prod_shibboleth = ShibbolethHelper::useProductionShibboleth();
+  $is_prod_and_use_prod_shibboleth = $use_prod_shibboleth && $use_saml_in_prod;
   if ($is_prod_and_use_prod_shibboleth) {
     //Loop through links and remove ones that contain 'test'
     foreach ($variables['items'] as $index => $link) {
@@ -307,7 +308,7 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
     $form['#cache'] = ['max-age' => 0];
 
     $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? FALSE;
-    $is_prod_and_hide = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $hide_drupal_login_prod);
+    $use_prod_shib_and_hide_drupal_login = (ShibbolethHelper::useProductionShibboleth() && $hide_drupal_login_prod);
     $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? FALSE;
 
     $sso_text = $config->getRawData()['sso_text'] ?? "Login with your NetID";
@@ -316,7 +317,7 @@ function cwd_saml_mapping_form_alter(&$form, \Drupal\Core\Form\FormStateInterfac
       '#weight' => -999,
     );
 
-    if ($hide_drupal_login || $is_prod_and_hide) {
+    if ($hide_drupal_login || $use_prod_shib_and_hide_drupal_login) {
       unset($form['name']);
       unset($form['pass']);
       unset($form['actions']);
@@ -355,9 +356,9 @@ function cwd_saml_mapping_user_login_form_submit($form, FormStateInterface $form
 function cwd_saml_mapping_local_tasks_alter(&$local_tasks) {
   $config = \Drupal::config('cwd_saml_mapping.config_form');
   $hide_drupal_login_prod = $config->getRawData()['hide_drupal_login_prod'] ?? FALSE;
-  $is_prod_and_hide = (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live' && $hide_drupal_login_prod);
+  $use_prod_shib_and_hide_drupal_login = (ShibbolethHelper::useProductionShibboleth() && $hide_drupal_login_prod);
   $hide_drupal_login = $config->getRawData()['hide_drupal_login'] ?? FALSE;
-  if ($hide_drupal_login || $is_prod_and_hide) {
+  if ($hide_drupal_login || $use_prod_shib_and_hide_drupal_login) {
     unset($local_tasks['user.register']);
     unset($local_tasks['user.login']);
   }
@@ -452,7 +453,7 @@ function cwd_saml_mapping_preprocess_page(&$variables) {
         $url_string = "/saml/drupal_login";
         $samlsp_login_config = \Drupal::config('saml_sp_drupal_login.config');
         $idps = $samlsp_login_config->getRawData()['idp'];
-        if (isset($_ENV['PANTHEON_ENVIRONMENT']) && $_ENV['PANTHEON_ENVIRONMENT'] === 'live') {
+        if (ShibbolethHelper::useProductionShibboleth()) {
           $url_string .= "/" . $idps['cornell_prod'];
         }
         else {

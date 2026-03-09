@@ -48,7 +48,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     ];
     $form['customize_links']['use_prod_in_saml'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Use Production Shibboleth on the Live/Production site.'),
+      '#title' => $this->t('Use Production Shibboleth on all Assertion Consumer URLs. Once your site is launched this should always be enabled.'),
       '#default_value' => $config->get('use_prod_in_saml'),
     ];
     $form['customize_links']['show_all_idps'] = [
@@ -63,7 +63,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     ];
     $form['customize_links']['hide_drupal_login_prod'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Hide Drupal Login in Prod.'),
+      '#title' => $this->t('Hide Drupal Login in all envs using Production Shibboleth.'),
       '#default_value' => $config->get('hide_drupal_login_prod'),
     ];
     $form['customize_headings'] = [
