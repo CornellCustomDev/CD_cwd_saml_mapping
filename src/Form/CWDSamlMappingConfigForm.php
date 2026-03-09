@@ -63,7 +63,7 @@ class CWDSamlMappingConfigForm extends ConfigFormBase {
     ];
     $form['customize_links']['hide_drupal_login_prod'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Hide Drupal Login in Prod.'),
+      '#title' => $this->t('Hide Drupal Login in all envs using Production Shibboleth.'),
       '#default_value' => $config->get('hide_drupal_login_prod'),
     ];
     $form['customize_headings'] = [

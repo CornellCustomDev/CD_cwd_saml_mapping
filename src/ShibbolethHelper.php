@@ -31,4 +31,18 @@ class ShibbolethHelper {
     ];
     return $mapping_array;
   }
+
+  public static function useProductionShibboleth() {
+    $saml_sp_assertion_consumer_url = \Drupal::config('saml_sp.settings')->get('assertion_urls');
+    $urls = explode("\r\n", $saml_sp_assertion_consumer_url);
+    $current_domain = \Drupal::request()->getHost();
+    foreach ($urls as $url) {
+      $url = str_replace('https://', '', $url);
+      $final_domain = str_replace('/saml/consume', '', $url);
+      if($final_domain === $current_domain) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
